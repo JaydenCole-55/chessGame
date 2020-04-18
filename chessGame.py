@@ -140,10 +140,15 @@ while 1:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 pos = pygame.mouse.get_pos()
                 if piece_chosen == 1:
+                    # Check if it takes an opponents piece
+                    fn_check_if_takes( pos, pieces )
+
+                    # Then move piece to that position
                     chosen_piece.rect.center = pos
                     chosen_piece.fn_update_position(pos)
                     pieces.append(chosen_piece)
                     turn_going = False
+
                 else:
                     for piece in pieces:
                         if piece.rect.collidepoint(pos):
@@ -169,3 +174,9 @@ while 1:
     print("\n=======================\n")
     pygame.display.flip()
     turn_num = turn_num + 1
+
+    def fn_check_if_takes( pos, pieces ):
+        for piece in pieces:
+            if piece.rect.collidepoint(pos):
+                pieces.pop( pieces.index( piece ) )
+            # Check if the pos is overlapping one of the pieces, if so, remove it
