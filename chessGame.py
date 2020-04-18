@@ -141,13 +141,16 @@ def main():
         while turn_going:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: sys.exit()
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:   
                     pos = pygame.mouse.get_pos()
+
                     if chosenPiece != None:
-                        #TODO check if it is the same position -> to deselect
+                        # The piece has the piece been previously chosen
                         newPos = fn_get_square( pos )
+
                         if newPos == oldPos:
-                            # Same position, deselect piece and skip rest of event
+                            # User clicked on the piece twice, deselect piece and don't move it
                             pieces.append( chosenPiece )
                             chosenPiece = None
                             oldPos = None
@@ -156,10 +159,12 @@ def main():
                         # Check if it takes an opponents piece
                         fn_check_if_takes( pos, pieces, player )
 
-                        # Then move piece to that position and append back to pieces
+                        # Then move piece to that position and append it back to pieces
                         chosenPiece.rect.center = pos
                         chosenPiece.fn_update_position( pos )
                         pieces.append( chosenPiece )
+
+                        # End the turn
                         turn_going = False
                     else:
                         for piece in pieces:
@@ -170,7 +175,8 @@ def main():
                                     chosenPiece = pieces.pop( pieces.index( piece ) )
                                     oldPos = fn_get_square( pos )
                                     break
-                # Option to right click to deselect piece
+
+                # Right click to deselect piece
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                     # Put piece back in pieces list
                     pieces.append( chosenPiece )
