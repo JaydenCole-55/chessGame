@@ -9,9 +9,12 @@ class Piece():
         self.squareNum      = None
         self.chessPosition  = None
         self.screenPosition = None
+        self.allMoves       = None
+        self.currentMoves  = None
         self.col            = {'a':0, 'b':100, 'c':200, 'd':300, 'e':400, 'f':500, 'g':600, 'h':700}
         self.row            = {'8':0, '7':100, '6':200, '5':300, '4':400, '3':500, '2':600, '1':700}
         self.fn_update_position( position )
+
 
     def fn_update_position(self, position):
         # Passed: Some form of position coordinates
@@ -37,7 +40,7 @@ class Piece():
         # Update the other methods of displaying position - based on the square number
         self.fn_chessboard_location()
         self.fn_screen_position()
-        
+
 
     def fn_chessboard_location( self ):
         # Passed: None
@@ -51,6 +54,7 @@ class Piece():
         self.chessPosition = chessLoc
         self.fn_update_name()
 
+
     def fn_screen_position( self ):
         x = ( ( self.squareNum % 8 ) - 1) * 100
         if x < 0:
@@ -58,8 +62,10 @@ class Piece():
         y = ( 8 - math.ceil( self.squareNum / 8 ) ) * 100
         self.screenPosition = (x, y)
 
+
     def fn_possible_moves( self ):
         pass
+
 
     def fn_update_name( self ):
         pass
@@ -108,9 +114,15 @@ class Pawn( Piece ):
     def __init__( self, team, position, image ):
         Piece.__init__(self, team, position, image )
         self.fn_update_name()
+        if team == 'W':
+            self.allMoves = {'U':1, 'U':2, 'UL':1, 'UR':1}
+        else:
+            self.allMoves = {'D':1, 'D':2, 'DL':1, 'DR':1}
 
     def fn_posible_moves( self ):
-        pass
+        self.currentMoves = None
+        for move in self.allMoves:
+            self.currentMoves = self.currentMoves + fn_get_pos_squares( self.allMoves )
 
     def fn_possible_takes( self ):
         pass
