@@ -136,22 +136,30 @@ def main():
             turn_going = False
 
         # Wait for user to choose where to move piece
-        chosen_piece = None  
+        chosenPiece = None
+        oldPos = None
         while turn_going:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     pos = pygame.mouse.get_pos()
-                    if chosen_piece != None:
-                        #TODO heck if it is the same position -> to deselect
+                    if chosenPiece != None:
+                        #TODO check if it is the same position -> to deselect
+                        newPos = fn_get_square( pos )
+                        if newPos == oldPos:
+                            # Same position, deselect piece and skip rest of event
+                            pieces.append( chosenPiece )
+                            chosenPiece = None
+                            oldPos = None
+                            continue
 
                         # Check if it takes an opponents piece
                         fn_check_if_takes( pos, pieces, player )
 
-                        # Then move piece to that position
-                        chosen_piece.rect.center = pos
-                        chosen_piece.fn_update_position( pos )
-                        pieces.append( chosen_piece )
+                        # Then move piece to that position and append back to pieces
+                        chosenPiece.rect.center = pos
+                        chosenPiece.fn_update_position( pos )
+                        pieces.append( chosenPiece )
                         turn_going = False
                     else:
                         for piece in pieces:
@@ -159,13 +167,15 @@ def main():
                                 # Player is attempting to move this piece
                                 if piece.team == player:
                                     # Remove from pieces list to be modified and appended back later
-                                    chosen_piece = pieces.pop( pieces.index( piece ) )
+                                    chosenPiece = pieces.pop( pieces.index( piece ) )
+                                    oldPos = fn_get_square( pos )
                                     break
                 # Option to right click to deselect piece
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                     # Put piece back in pieces list
-                    pieces.append( chosen_piece )
-                    chosen_piece = None
+                    pieces.append( chosenPiece )
+                    chosenPiece = None
+                    oldPos = None
 
         # Check its a possible move and not outside/around the board
         # Check if it takes any piece
@@ -176,11 +186,12 @@ def main():
         # Draw the pieces
         for piece2 in pieces:
             piece2.rect = screen.blit( piece2.image, piece2.screenPosition )
-            print("I am " + piece2.name + " located at squareNum " + str(piece2.squareNum) + " with Chess: " + piece2.chessPosition + " and Screen: " + str(piece2.screenPosition[0]) + ", " +str(piece2.screenPosition[1]))
+            #print("I am " + piece2.name + " located at squareNum " + str(piece2.squareNum) + " with Chess: " + piece2.chessPosition + " and Screen: " + str(piece2.screenPosition[0]) + ", " +str(piece2.screenPosition[1]))
 
         # Put the display to screen
         pygame.display.flip()
         turn_num = turn_num + 1
+
 
 def fn_check_if_takes( pos, pieces, player ):
     # Passed: cords fo the position, list of pieces, the player colour
@@ -191,6 +202,15 @@ def fn_check_if_takes( pos, pieces, player ):
             if piece.team != player:
                 pieces.pop( pieces.index( piece ) )
                 return
+
+
+def fn_get_square( position ):
+    # Passed: a tuple of Coordinates
+    # Returns: the square number
+    x = position[0]
+    y = position[1]
+    return 64 - 8 * (math.floor( y/100 ) + 1) + math.floor( x/100 ) + 1
+
 
 if __name__ == "__main__":
     main()
