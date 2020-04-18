@@ -108,7 +108,7 @@ for pawnNum in range(16):
     pieces = pieces + [pawn]
 
 # Pieces are ready, start game
-turn_num = -1
+turn_num = -1 # Turn -1 initializes board
 while 1:
     # Clear Screen
     screen.fill(0)
@@ -116,8 +116,10 @@ while 1:
     # Determine which player turn
     if turn_num%2 == 0:
         player = 'W'
+        print("White turn")
     else:
         player = 'B'
+        print("Black turn")
     
     # Draw the board
     for x in range(math.floor( width/ black_tile.get_width() ) + 6):
@@ -133,32 +135,34 @@ while 1:
         turn_going = False
 
     # Wait for user to choose where to move piece
-    piece_chosen = 0  
+    chosen_piece = None  
     while turn_going:
         for event in pygame.event.get():
             if event.type == pygame.QUIT: sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 pos = pygame.mouse.get_pos()
-                if piece_chosen == 1:
+                if chosen_piece != None:
                     # Check if it takes an opponents piece
-                    fn_check_if_takes( pos, pieces )
+                    fn_check_if_takes( pos, pieces, player )
 
                     # Then move piece to that position
                     chosen_piece.rect.center = pos
-                    chosen_piece.fn_update_position(pos)
-                    pieces.append(chosen_piece)
+                    chosen_piece.fn_update_position( pos )
+                    pieces.append( chosen_piece )
                     turn_going = False
-
                 else:
                     for piece in pieces:
-                        if piece.rect.collidepoint(pos):
+                        if piece.rect.collidepoint( pos ):
                             # Player is attempting to move this piece
                             if piece.team == player:
-                                # It's their piece
-                                # Move piece with cursor
-                                piece_chosen = 1
+                                # Remove from pieces list to be modified and appended back later
                                 chosen_piece = pieces.pop( pieces.index( piece ) )
                                 break
+            # Option to right click to deselect piece
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                # Put piece back in pieces list
+                pieces.append( chosen_piece )
+                chosen_piece = None
     
     # Check its a possible move and not outside/around the board
     # Check if it takes any piece
@@ -169,14 +173,18 @@ while 1:
     # Draw the pieces
     for piece2 in pieces:
         piece2.rect = screen.blit(piece2.image,piece2.screenPos)
-        print("I am a " + piece2.name + " located at: " + piece2.position + ". x = " + str(piece2.screenPos[0]) + ", y = " + str(piece2.screenPos[1]) )
+        #print("I am a " + piece2.name + " located at: " + piece2.position + ". x = " + str(piece2.screenPos[0]) + ", y = " + str(piece2.screenPos[1]) )
 
-    print("\n=======================\n")
+    #print("\n=======================\n")
     pygame.display.flip()
     turn_num = turn_num + 1
 
-    def fn_check_if_takes( pos, pieces ):
+    def fn_check_if_takes( pos, pieces, player ):
+        # Passed: cords fo the position, list of pieces, the player colour
+        # Returns: None
+        # Checks if the passed square has an oppenent piece and removes it
         for piece in pieces:
             if piece.rect.collidepoint(pos):
-                pieces.pop( pieces.index( piece ) )
+                if piece.team != player:
+                    pieces.pop( pieces.index( piece ) )
             # Check if the pos is overlapping one of the pieces, if so, remove it
