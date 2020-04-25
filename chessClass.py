@@ -105,6 +105,8 @@ class Piece():
         for move in self.allMoves:
             for length in self.allMoves[ move ]:
                 if move == 'U':
+                    if "Pawn" in self.name and "2" not in self.chessPosition and length == 2:
+                        continue
                     square = self.squareNum + 8 * length
 
                 elif move == 'UL':
@@ -126,6 +128,8 @@ class Piece():
                         break
 
                 elif move == 'D':
+                    if "Pawn" in self.name and "7" not in self.chessPosition and length == 2:
+                        continue
                     square = self.squareNum - 8 * length
 
                 elif move == 'DR':

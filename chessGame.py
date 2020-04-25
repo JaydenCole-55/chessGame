@@ -210,8 +210,6 @@ def main():
                     chosenPiece = None
                     oldPos = None
 
-        # Check its a possible move and not outside/around the board
-        # Check if it takes any piece
         # Check if it puts their king in danger
         # Check if it puts the other king in danger
         # End turn, switch turns
