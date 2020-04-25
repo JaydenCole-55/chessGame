@@ -117,10 +117,10 @@ def main():
         # Determine which player turn
         if turn_num%2 == 0:
             player = 'W'
-            #print("White turn")
+            print("White turn")
         else:
             player = 'B'
-            #print("Black turn")
+            print("Black turn")
 
         # Draw the board
         for x in range(math.floor( width/ black_tile.get_width() ) + 6):
@@ -156,12 +156,30 @@ def main():
                             oldPos = None
                             continue
 
+                        # Check if it is a possible move
+                        possibleSquareNums = chosenPiece.fn_possible_moves( pieces )
+                        if newPos not in possibleSquareNums:
+                            # Where the player clicked is not a good move, make them click a good move
+                            print("Not a valid move")
+                            continue
+
+                        # Check if its a castle
+                        if "King" in piece.name:
+                            if piece.team == 'W' and not piece.hasMoved and newPos == 7:
+                            # This is a kingside castles situation, move the rook as well
+                                fn_move_piece( 8, 6, pieces)
+
                         # Check if it takes an opponents piece
                         fn_check_if_takes( pos, pieces, player )
 
                         # Then move piece to that position and append it back to pieces
                         chosenPiece.rect.center = pos
                         chosenPiece.fn_update_position( pos )
+
+                        # If King/rook, moving means no more castling
+                        if "King" in piece.name or "Rook" in piece.name:
+                            chosenPiece.hasMoved = True
+
                         pieces.append( chosenPiece )
 
                         # End the turn
@@ -216,6 +234,15 @@ def fn_get_square( position ):
     x = position[0]
     y = position[1]
     return 64 - 8 * (math.floor( y/100 ) + 1) + math.floor( x/100 ) + 1
+
+
+def fn_move_piece( position1, position2, pieces ):
+    # Passed: int, int, list
+    # Returns: None
+    # Moves piece at position1 to position2
+    for piece in pieces:
+        if piece.squareNum == position1:
+            piece.fn_update_position( position2 )
 
 
 if __name__ == "__main__":
