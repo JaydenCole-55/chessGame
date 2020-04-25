@@ -166,8 +166,17 @@ def main():
                         # Check if its a castle
                         if "King" in piece.name:
                             if piece.team == 'W' and not piece.hasMoved and newPos == 7:
-                            # This is a kingside castles situation, move the rook as well
+                                # This is a white king side castles situation, move the rook as well
                                 fn_move_piece( 8, 6, pieces)
+                            if piece.team == 'W' and not piece.hasMoved and newPos == 3:
+                                # This is a white queen side castles situation, move the rook as well
+                                fn_move_piece( 1, 4, pieces)
+                            if piece.team == 'B' and not piece.hasMoved and newPos == 63:
+                                # This is a black king side castles situation, move the rook as well
+                                fn_move_piece( 64, 62, pieces)
+                            if piece.team == 'B' and not piece.hasMoved and newPos == 59:
+                                # This is a black queen side castles situation, move the rook as well
+                                fn_move_piece( 57, 60, pieces)
 
                         # Check if it takes an opponents piece
                         fn_check_if_takes( pos, pieces, player )
@@ -176,7 +185,7 @@ def main():
                         chosenPiece.rect.center = pos
                         chosenPiece.fn_update_position( pos )
 
-                        # If King/rook, moving means no more castling
+                        # If King/rook move means no more castling with that piece
                         if "King" in piece.name or "Rook" in piece.name:
                             chosenPiece.hasMoved = True
 

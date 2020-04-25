@@ -102,7 +102,6 @@ class Piece():
         # Determines what squareNums this piece can move to
         possibleMoves = []
         jumping = False
-        kingCastle = False
         for move in self.allMoves:
             for length in self.allMoves[ move ]:
                 if move == 'U':
@@ -165,18 +164,23 @@ class Piece():
                     # Piece won't wrap around left or right
                     square = self.squareNum + length
 
-                elif move == 'KC': # Castles
+                elif move == 'KC': # King side castle
                     if self.hasMoved == False:
                         if self.team == 'W':
                             if fn_check_empty( [6,7], pieces ) and fn_check_piece_is_there( 'WRook', 8, pieces ) and not fn_check_moved( 8, pieces ):
-                                # Can castle
                                 square = 7
-                                kingCastle = True
-                        #else:
-                            #fn_check_empty( [62,63], pieces )
-                            #fn_check_not_moved('BRook', 64, pieces)
-                    #pass
-                    # Otherwise hasMoved is true and no castling can take place
+                        else:
+                            if fn_check_empty( [62,63], pieces ) and fn_check_piece_is_there( 'BRook', 64, pieces ) and not fn_check_moved( 64, pieces ):
+                                square = 63
+                
+                elif move == 'QC': # Queen side castle
+                    if self.hasMoved == False:
+                        if self.team == 'W':
+                            if fn_check_empty( [2,3,4], pieces ) and fn_check_piece_is_there( 'WRook', 1, pieces ) and not fn_check_moved ( 1, pieces ):
+                                square = 3
+                        else:
+                            if fn_check_empty( [58,59,60], pieces ) and fn_check_piece_is_there( 'BRook', 57, pieces ) and not fn_check_moved ( 57, pieces ):
+                                square = 59
                 
                 # Check if square is on the board (checks U and D directions)
                 if square < 0 or square > 64:
