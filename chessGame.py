@@ -128,12 +128,7 @@ def main():
             print("Black turn")
 
         # Draw the board
-        for x in range(math.floor( width/ black_tile.get_width() ) + 6):
-            for y in range( math.floor( height/ black_tile.get_height() ) + 6):
-                if (x+y)%2 == 0:
-                    screen.blit(white_tile,(x*100,y*100))
-                else:
-                    screen.blit(black_tile,(x*100,y*100))
+        fn_draw_board( screen, black_tile )
 
         # First time through loop only draw the pieces, no turns
         turnGoing = True
@@ -293,6 +288,18 @@ def fn_write_to_game_log( player, chosenPiece, takes, castles ):
 
     if player == 'B':
         gameFile.write( '\n' )
+
+
+def fn_draw_board( screen, tile ):
+    # Passed: Screen object, tile picture
+    # Returns: None
+    # Draws the background screen
+    for x in range(math.floor( width/ tile.get_width() ) + 6):
+        for y in range( math.floor( height/ tile.get_height() ) + 6):
+            if (x+y)%2 == 0:
+                screen.blit(white_tile,(x*100,y*100))
+            else:
+                screen.blit(black_tile,(x*100,y*100))
 
 
 if __name__ == "__main__":

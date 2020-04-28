@@ -127,7 +127,6 @@ class Piece():
 
                 elif move == 'UL':
                     square = self.squareNum + 8 * length - length
-
                     if square % 8 == 0 or ( "Pawn" in self.name and not fn_pawn_can_take( self, pieces, square ) ):
                         # Went around board, or not a valid pawn move, end this move direction
                         break
@@ -140,7 +139,6 @@ class Piece():
 
                 elif move == 'DL':
                     square = self.squareNum - 8 * length - length
-
                     if square % 8 == 0 or ( "Pawn" in self.name and not fn_pawn_can_take( self, pieces, square ) ):
                         # Went around board, or not a valid pawn move, end this move direction
                         break
