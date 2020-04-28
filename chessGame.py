@@ -19,6 +19,7 @@ resource_path   = os.path.join( current_path,  'resources2' )
 image_path      = os.path.join( resource_path, 'images'     )
 audio_path      = os.path.join( resource_path, 'audio'      )
 pieces_img_path = os.path.join( image_path,    'pieces'     )
+log_path        = os.path.join( current_path,  'game log'   )
 
 # Load audio
 pygame.mixer.music.load( os.path.join( audio_path, "intro.mp3" ) )
@@ -44,6 +45,10 @@ BRookImg   = pygame.image.load( os.path.join( pieces_img_path, "BRook.png"))
 BKnightImg = pygame.image.load( os.path.join( pieces_img_path, "BKnight.png"))
 BBishopImg = pygame.image.load( os.path.join( pieces_img_path, "BBishop.png"))
 BPawnImg   = pygame.image.load( os.path.join( pieces_img_path, "BPawn.png"))
+
+# Open file to log moves
+log_file = os.path.join( log_path, "Game Log.txt" )
+gameFile = open( log_file, "w" )
 
 def main():
     # Start main menu
@@ -131,16 +136,18 @@ def main():
                     screen.blit(black_tile,(x*100,y*100))
 
         # First time through loop only draw the pieces, no turns
-        turn_going = True
+        turnGoing = True
         if turn_num < 0:
-            turn_going = False
+            turnGoing = False
 
         # Wait for user to choose where to move piece
         chosenPiece = None
         oldPos = None
-        while turn_going:
+        while turnGoing:
             for event in pygame.event.get():
-                if event.type == pygame.QUIT: sys.exit()
+                if event.type == pygame.QUIT: 
+                    gameFile.close()
+                    sys.exit()
                 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:   
                     pos = pygame.mouse.get_pos()
@@ -158,32 +165,41 @@ def main():
 
                         # Check if it is a possible move
                         possibleSquareNums = chosenPiece.fn_possible_moves( pieces )
+
                         if newPos not in possibleSquareNums:
                             # Where the player clicked is not a good move, make them click a good move
                             print("Not a valid move")
                             continue
 
                         # Check if its a castle
+                        castles = ""
                         if "King" in piece.name:
                             if piece.team == 'W' and not piece.hasMoved and newPos == 7:
                                 # This is a white king side castles situation, move the rook as well
                                 fn_move_piece( 8, 6, pieces)
-                            if piece.team == 'W' and not piece.hasMoved and newPos == 3:
+                                castles = "0-0 "
+                            elif piece.team == 'W' and not piece.hasMoved and newPos == 3:
                                 # This is a white queen side castles situation, move the rook as well
                                 fn_move_piece( 1, 4, pieces)
-                            if piece.team == 'B' and not piece.hasMoved and newPos == 63:
+                                castles = "0-0-0 "
+                            elif piece.team == 'B' and not piece.hasMoved and newPos == 63:
                                 # This is a black king side castles situation, move the rook as well
                                 fn_move_piece( 64, 62, pieces)
-                            if piece.team == 'B' and not piece.hasMoved and newPos == 59:
+                                castles = "0-0"
+                            elif piece.team == 'B' and not piece.hasMoved and newPos == 59:
                                 # This is a black queen side castles situation, move the rook as well
                                 fn_move_piece( 57, 60, pieces)
+                                castles = "0-0-0"
 
                         # Check if it takes an opponents piece
-                        fn_check_if_takes( pos, pieces, player )
+                        takes = fn_check_if_takes( pos, pieces, player )
 
                         # Then move piece to that position and append it back to pieces
                         chosenPiece.rect.center = pos
                         chosenPiece.fn_update_position( pos )
+
+                        # Write the move to the game log
+                        fn_write_to_game_log( player, chosenPiece, takes, castles )
 
                         # If King/rook move means no more castling with that piece
                         if "King" in piece.name or "Rook" in piece.name:
@@ -192,7 +208,7 @@ def main():
                         pieces.append( chosenPiece )
 
                         # End the turn
-                        turn_going = False
+                        turnGoing = False
                     else:
                         for piece in pieces:
                             if piece.rect.collidepoint( pos ):
@@ -200,6 +216,15 @@ def main():
                                 if piece.team == player:
                                     # Remove from pieces list to be modified and appended back later
                                     chosenPiece = pieces.pop( pieces.index( piece ) )
+
+                                    # Check if the piece can move
+                                    possibleSquares = chosenPiece.fn_possible_moves( pieces )
+                                    if not possibleSquares:
+                                        # This piece has no moves, player cannot select this piece
+                                        pieces.append( chosenPiece )
+                                        chosenPiece = None
+                                        print("This piece has no moves")
+
                                     oldPos = fn_get_square( pos )
                                     break
 
@@ -225,14 +250,16 @@ def main():
 
 
 def fn_check_if_takes( pos, pieces, player ):
-    # Passed: cords fo the position, list of pieces, the player colour
-    # Returns: None
+    # Passed: cords of the position, list of pieces, the player colour
+    # Returns: bool
     # Checks if the passed square has an oppenent piece and removes it
     for piece in pieces:
         if piece.rect.collidepoint(pos):
             if piece.team != player:
                 pieces.pop( pieces.index( piece ) )
-                return
+                return True
+    
+    return False
 
 
 def fn_get_square( position ):
@@ -252,6 +279,23 @@ def fn_move_piece( position1, position2, pieces ):
             piece.fn_update_position( position2 )
 
 
+def fn_write_to_game_log( player, chosenPiece, takes, castles ):
+    # Passed: String, Piece, bool, bool
+    # Returns: None
+    # Writes to game log what move was played
+    
+    if takes:
+        gameFile.write( chosenPiece.abbrv + 'x' + chosenPiece.chessPosition + ' ' )
+    elif castles:
+        gameFile.write( castles )
+    else:
+        gameFile.write( chosenPiece.abbrv + chosenPiece.chessPosition + ' ' )
+
+    if player == 'B':
+        gameFile.write( '\n' )
+
+
 if __name__ == "__main__":
     main()
+    gameFile.close()
     

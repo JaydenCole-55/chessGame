@@ -34,6 +34,17 @@ def fn_check_moved( squareNum, pieces ):
             return piece.hasMoved
 
 
+def fn_pawn_can_take( pawnPiece, pieces, square ):
+    # Passed: A pawn, the pieces, int
+    # Returns: if the pawn has a piece it can take on that square
+    pieceThere = False
+    for piece in pieces:
+        if piece.squareNum == square and pawnPiece.team != piece.team:
+            return True
+
+    return False
+
+
 class Piece():
     def __init__ (self, team, position, image):
         self.team           = team
@@ -45,6 +56,7 @@ class Piece():
         self.screenPosition = None
         self.allMoves       = None
         self.currentMoves   = None
+        self.abbrv          = None
         self.col            = {'a':0, 'b':100, 'c':200, 'd':300, 'e':400, 'f':500, 'g':600, 'h':700}
         self.row            = {'8':0, '7':100, '6':200, '5':300, '4':400, '3':500, '2':600, '1':700}
         self.fn_update_position( position )
@@ -105,14 +117,19 @@ class Piece():
         for move in self.allMoves:
             for length in self.allMoves[ move ]:
                 if move == 'U':
-                    if "Pawn" in self.name and "2" not in self.chessPosition and length == 2:
-                        continue
                     square = self.squareNum + 8 * length
+                    if "Pawn" in self.name and "2" not in self.chessPosition and length == 2:
+                        # Pawn is not on 2nd rank, cannot move 2 squares
+                        continue
+                    elif "Pawn" in self.name and not fn_check_empty( [square], pieces):
+                        # Square is not empty, pawn cannot move there
+                        continue
 
                 elif move == 'UL':
                     square = self.squareNum + 8 * length - length
-                    if square % 8 == 0:
-                        # Went around board, end this move direction
+
+                    if square % 8 == 0 or ( "Pawn" in self.name and not fn_pawn_can_take( self, pieces, square ) ):
+                        # Went around board, or not a valid pawn move, end this move direction
                         break
 
                 elif move == 'L':
@@ -123,19 +140,24 @@ class Piece():
 
                 elif move == 'DL':
                     square = self.squareNum - 8 * length - length
-                    if square % 8 == 0:
-                        # Went around board, end this move direction
+
+                    if square % 8 == 0 or ( "Pawn" in self.name and not fn_pawn_can_take( self, pieces, square ) ):
+                        # Went around board, or not a valid pawn move, end this move direction
                         break
 
                 elif move == 'D':
-                    if "Pawn" in self.name and "7" not in self.chessPosition and length == 2:
-                        continue
                     square = self.squareNum - 8 * length
+                    if "Pawn" in self.name and "7" not in self.chessPosition and length == 2:
+                        # Pawn not on 7th rank, cannot move 2 squares
+                        continue
+                    elif "Pawn" in self.name and not fn_check_empty( [square], pieces):
+                        # Square is not empty, pawn cannot move there
+                        continue
 
                 elif move == 'DR':
                     square = self.squareNum - 8 * length + length
-                    if square % 8 == 1:
-                        # Went around board, end this move direction
+                    if square % 8 == 1 or ( "Pawn" in self.name and not fn_pawn_can_take( self, pieces, square ) ):
+                        # Went around board, or not a valid pawn move, end this move direction
                         break
                 
                 elif move == 'R':
@@ -146,8 +168,8 @@ class Piece():
 
                 elif move == 'UR':
                     square = self.squareNum + 8 * length + length
-                    if square % 8 == 1:
-                        # Went around board, end this move direction
+                    if square % 8 == 1 or ( "Pawn" in self.name and not fn_pawn_can_take( self, pieces, square ) ):
+                        # Went around board, or not a valid pawn move, end this move direction
                         break
 
                 elif move == 'K':
@@ -225,6 +247,7 @@ class King( Piece ):
         self.name = self.team + "King"
         self.allMoves = { 'U':[1], 'UL':[1], 'L':[1], 'DL':[1], 'D':[1], 'DR':[1], 'R':[1], 'UR':[1], 'KC':[1], 'QC':[1] }
         self.hasMoved = False
+        self.abbrv    = 'K'
 
 
 class Queen( Piece ):
@@ -232,6 +255,7 @@ class Queen( Piece ):
         Piece.__init__(self, team, position, image )
         self.name = self.team + "Queen"
         self.allMoves = { 'U':[1,2,3,4,5,6,7], 'UL':[1,2,3,4,5,6,7], 'L':[1,2,3,4,5,6,7], 'DL':[1,2,3,4,5,6,7], 'D':[1,2,3,4,5,6,7], 'DR':[1,2,3,4,5,6,7], 'R':[1,2,3,4,5,6,7], 'UR':[1,2,3,4,5,6,7] }
+        self.abbrv    = 'Q'
 
 
 class Rook( Piece ):
@@ -240,6 +264,7 @@ class Rook( Piece ):
         self.name = self.team + "Rook"
         self.allMoves = { 'U':[1,2,3,4,5,6,7], 'L':[1,2,3,4,5,6,7], 'D':[1,2,3,4,5,6,7], 'R':[1,2,3,4,5,6,7] }
         self.hasMoved = False
+        self.abbrv    = 'R'
 
 
 class Knight( Piece ):
@@ -247,6 +272,7 @@ class Knight( Piece ):
         Piece.__init__(self, team, position, image )
         self.name = self.team + "Knight"
         self.allMoves = { 'K':[-17,-15,-10,-6,6,10,15,17] }
+        self.abbrv    = 'N'
 
 
 class Bishop( Piece ):
@@ -254,12 +280,14 @@ class Bishop( Piece ):
         Piece.__init__(self, team, position, image )
         self.name = self.team + "Bishop"
         self.allMoves = { 'UL':[1,2,3,4,5,6,7], 'DL':[1,2,3,4,5,6,7], 'DR':[1,2,3,4,5,6,7], 'UR':[1,2,3,4,5,6,7] }
+        self.abbrv    = 'B'
 
 
 class Pawn( Piece ):
     def __init__( self, team, position, image ):
         Piece.__init__(self, team, position, image )
         self.fn_update_name()
+        self.abbrv    = ''
         if team == 'W':
             self.allMoves = {'U':[1,2], 'UL':[1], 'UR':[1]}
         else:
