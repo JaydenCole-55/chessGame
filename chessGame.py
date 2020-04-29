@@ -128,7 +128,7 @@ def main():
             print("Black turn")
 
         # Draw the board
-        fn_draw_board( screen, black_tile )
+        fn_draw_tiles( screen, black_tile )
 
         # First time through loop only draw the pieces, no turns
         turnGoing = True
@@ -153,9 +153,7 @@ def main():
 
                         if newPos == oldPos:
                             # User clicked on the piece twice, deselect piece and don't move it
-                            pieces.append( chosenPiece )
-                            chosenPiece = None
-                            oldPos = None
+                            [pieces, chosenPiece, oldPos] = fn_deselect_piece( piece, pieces, chosenPiece, oldPos )
                             continue
 
                         # Check if it is a possible move
@@ -225,19 +223,14 @@ def main():
 
                 # Right click to deselect piece
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-                    # Put piece back in pieces list
-                    pieces.append( chosenPiece )
-                    chosenPiece = None
-                    oldPos = None
+                    [pieces, chosenPiece, oldPos] = fn_deselect_piece( piece, pieces, chosenPiece, oldPos )
 
         # Check if it puts their king in danger
         # Check if it puts the other king in danger
         # End turn, switch turns
 
         # Draw the pieces
-        for piece2 in pieces:
-            piece2.rect = screen.blit( piece2.image, piece2.screenPosition )
-            #print("I am " + piece2.name + " located at squareNum " + str(piece2.squareNum) + " with Chess: " + piece2.chessPosition + " and Screen: " + str(piece2.screenPosition[0]) + ", " +str(piece2.screenPosition[1]))
+        fn_draw_pieces( screen, pieces )
 
         # Put the display to screen
         pygame.display.flip()
@@ -290,16 +283,30 @@ def fn_write_to_game_log( player, chosenPiece, takes, castles ):
         gameFile.write( '\n' )
 
 
-def fn_draw_board( screen, tile ):
+def fn_draw_tiles( screen, tiles ):
     # Passed: Screen object, tile picture
     # Returns: None
     # Draws the background screen
-    for x in range(math.floor( width/ tile.get_width() ) + 6):
-        for y in range( math.floor( height/ tile.get_height() ) + 6):
+    for x in range(math.floor( width/ tiles.get_width() ) + 6):
+        for y in range( math.floor( height/ tiles.get_height() ) + 6):
             if (x+y)%2 == 0:
                 screen.blit(white_tile,(x*100,y*100))
             else:
                 screen.blit(black_tile,(x*100,y*100))
+
+
+def fn_draw_pieces( screen, pieces ):
+    for piece in pieces:
+        piece.rect = screen.blit( piece.image, piece.screenPosition )
+
+
+def fn_deselect_piece( piece, pieces, chosenPiece, oldPos ):
+    # Passed: A piece, the pieces
+    # Return: None
+    pieces.append( piece )
+    chosenPiece = None
+    oldPos      = None
+    return [pieces, chosenPiece, oldPos]
 
 
 if __name__ == "__main__":
