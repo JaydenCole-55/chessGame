@@ -31,6 +31,7 @@ start_button = pygame.image.load( os.path.join( image_path, "start button.png"))
 quit_button  = pygame.image.load( os.path.join( image_path, "quit button.jpg"))
 white_tile   = pygame.image.load( os.path.join( image_path, "white_square.jpg"))
 black_tile   = pygame.image.load( os.path.join( image_path, "black_square.jpg"))
+red_dot      = pygame.image.load( os.path.join( image_path, "red_dot2.jpg"))
 
 # Load images for the pieces
 WKingImg   = pygame.image.load( os.path.join( pieces_img_path, "WKing.png"))
@@ -145,12 +146,13 @@ def main():
                     pos = pygame.mouse.get_pos()
 
                     if chosenPiece != None:
-                        # The piece has the piece been previously chosen
+                        # A piece has been chosen
                         newPos = fn_get_square( pos )
 
                         if newPos == oldPos:
-                            # User clicked on the piece twice, deselect piece and don't move it
+                            # User clicked on the same piece twice, deselect piece and don't move it
                             [pieces, chosenPiece, oldPos] = fn_deselect_piece( piece, pieces, chosenPiece, oldPos )
+                            fn_draw_board( screen, black_tile, pieces, [], pygame.display)
                             continue
 
                         # Check if it is a possible move
@@ -204,32 +206,32 @@ def main():
                             if piece.rect.collidepoint( pos ) and piece.team == player:
                                 # Player is attempting to move this piece
                                 # Remove from pieces list to be modified and appended back later
-                                chosenPiece = pieces.pop( pieces.index( piece ) )
 
                                 # Check if the piece can move
-                                possibleSquares = chosenPiece.fn_possible_moves( pieces )
+                                possibleSquares = piece.fn_possible_moves( pieces )
                                 if not possibleSquares:
                                     # This piece has no moves, player cannot select this piece
-                                    pieces.append( chosenPiece )
-                                    chosenPiece = None
                                     print("This piece has no moves")
+                                else:
+                                    # Draw the possible move to the screen
+                                    fn_draw_board( screen, black_tile, pieces, possibleSquares, pygame.display)
 
+                                chosenPiece = pieces.pop( pieces.index( piece ) )
                                 oldPos = fn_get_square( pos )
                                 break
 
                 # Right click to deselect piece
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                     [pieces, chosenPiece, oldPos] = fn_deselect_piece( piece, pieces, chosenPiece, oldPos )
+                    fn_draw_board( screen, black_tile, pieces, [], pygame.display)
 
         # Check if it puts their king in danger
         # Check if it puts the other king in danger
         # End turn, switch turns
 
         # Draw the board
-        fn_draw_board( screen, black_tile, pieces )
+        fn_draw_board( screen, black_tile, pieces, [], pygame.display )
 
-        # Put the display to screen
-        pygame.display.flip()
         turn_num = turn_num + 1
 
 
@@ -242,7 +244,7 @@ def fn_check_if_takes( pos, pieces, player ):
             if piece.team != player:
                 pieces.pop( pieces.index( piece ) )
                 return True
-    
+
     return False
 
 
@@ -252,6 +254,16 @@ def fn_get_square( position ):
     x = position[0]
     y = position[1]
     return 64 - 8 * (math.floor( y/100 ) + 1) + math.floor( x/100 ) + 1
+
+
+def fn_get_screen_coords( sqNum ):
+    # Passed: a square number
+    # Returns: a tuple of coordinates
+    x = ( ( sqNum % 8 ) - 1) * 100
+    if x < 0:
+        x = 700
+    y = ( 8 - math.ceil( sqNum / 8 ) ) * 100
+    return (x, y)
 
 
 def fn_move_piece( position1, position2, pieces ):
@@ -296,9 +308,23 @@ def fn_draw_pieces( screen, pieces ):
         piece.rect = screen.blit( piece.image, piece.screenPosition )
 
 
-def fn_draw_board( screen, tiles, pieces ):
+def fn_draw_possible_moves( screen, possible_moves ):
+    # Passed: A screen, list
+    # Returns: None
+    # Draws red dots to possible move points
+    for move in possible_moves:
+        x,y = fn_get_screen_coords( move )
+        # Move the dot to the centre
+        screenCoords = (x+40, y+40)
+        screen.blit( red_dot, screenCoords )
+
+
+def fn_draw_board( screen, tiles, pieces, possible_moves, display ):
     fn_draw_tiles ( screen, tiles )
     fn_draw_pieces( screen, pieces )
+    fn_draw_possible_moves( screen, possible_moves )
+
+    display.flip()
 
 
 def fn_deselect_piece( piece, pieces, chosenPiece, oldPos ):
