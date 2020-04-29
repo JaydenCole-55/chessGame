@@ -127,9 +127,6 @@ def main():
             player = 'B'
             print("Black turn")
 
-        # Draw the board
-        fn_draw_tiles( screen, black_tile )
-
         # First time through loop only draw the pieces, no turns
         turnGoing = True
         if turn_num < 0:
@@ -204,22 +201,21 @@ def main():
                         turnGoing = False
                     else:
                         for piece in pieces:
-                            if piece.rect.collidepoint( pos ):
+                            if piece.rect.collidepoint( pos ) and piece.team == player:
                                 # Player is attempting to move this piece
-                                if piece.team == player:
-                                    # Remove from pieces list to be modified and appended back later
-                                    chosenPiece = pieces.pop( pieces.index( piece ) )
+                                # Remove from pieces list to be modified and appended back later
+                                chosenPiece = pieces.pop( pieces.index( piece ) )
 
-                                    # Check if the piece can move
-                                    possibleSquares = chosenPiece.fn_possible_moves( pieces )
-                                    if not possibleSquares:
-                                        # This piece has no moves, player cannot select this piece
-                                        pieces.append( chosenPiece )
-                                        chosenPiece = None
-                                        print("This piece has no moves")
+                                # Check if the piece can move
+                                possibleSquares = chosenPiece.fn_possible_moves( pieces )
+                                if not possibleSquares:
+                                    # This piece has no moves, player cannot select this piece
+                                    pieces.append( chosenPiece )
+                                    chosenPiece = None
+                                    print("This piece has no moves")
 
-                                    oldPos = fn_get_square( pos )
-                                    break
+                                oldPos = fn_get_square( pos )
+                                break
 
                 # Right click to deselect piece
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
@@ -229,8 +225,8 @@ def main():
         # Check if it puts the other king in danger
         # End turn, switch turns
 
-        # Draw the pieces
-        fn_draw_pieces( screen, pieces )
+        # Draw the board
+        fn_draw_board( screen, black_tile, pieces )
 
         # Put the display to screen
         pygame.display.flip()
@@ -289,15 +285,20 @@ def fn_draw_tiles( screen, tiles ):
     # Draws the background screen
     for x in range(math.floor( width/ tiles.get_width() ) + 6):
         for y in range( math.floor( height/ tiles.get_height() ) + 6):
-            if (x+y)%2 == 0:
-                screen.blit(white_tile,(x*100,y*100))
+            if( x + y ) % 2 == 0:
+                screen.blit( white_tile, ( x * 100, y * 100 ) )
             else:
-                screen.blit(black_tile,(x*100,y*100))
+                screen.blit( black_tile, ( x * 100, y * 100 ) )
 
 
 def fn_draw_pieces( screen, pieces ):
     for piece in pieces:
         piece.rect = screen.blit( piece.image, piece.screenPosition )
+
+
+def fn_draw_board( screen, tiles, pieces ):
+    fn_draw_tiles ( screen, tiles )
+    fn_draw_pieces( screen, pieces )
 
 
 def fn_deselect_piece( piece, pieces, chosenPiece, oldPos ):
