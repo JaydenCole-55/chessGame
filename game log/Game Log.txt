@@ -1,0 +1,5 @@
+f4 e6 
+e3 f6 
+Nf3 g6 
+Bb5 c6 
+Bc4 
