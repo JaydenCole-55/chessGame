@@ -31,7 +31,8 @@ start_button = pygame.image.load( os.path.join( image_path, "start button.png"))
 quit_button  = pygame.image.load( os.path.join( image_path, "quit button.jpg"))
 white_tile   = pygame.image.load( os.path.join( image_path, "white_square.jpg"))
 black_tile   = pygame.image.load( os.path.join( image_path, "black_square.jpg"))
-red_dot      = pygame.image.load( os.path.join( image_path, "red_dot2.jpg"))
+red_dot      = pygame.image.load( os.path.join( image_path, "red_dot.jpg"))
+white_strip  = pygame.image.load( os.path.join( image_path, "white_strip.png"))
 
 # Load images for the pieces
 WKingImg   = pygame.image.load( os.path.join( pieces_img_path, "WKing.png"))
@@ -142,7 +143,7 @@ def main():
                     gameFile.close()
                     sys.exit()
                 
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:   
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     pos = pygame.mouse.get_pos()
 
                     if chosenPiece != None:
@@ -152,7 +153,7 @@ def main():
                         if newPos == oldPos:
                             # User clicked on the same piece twice, deselect piece and don't move it
                             [pieces, chosenPiece, oldPos] = fn_deselect_piece( piece, pieces, chosenPiece, oldPos )
-                            fn_draw_board( screen, black_tile, pieces, [], pygame.display)
+                            fn_draw_board( screen, black_tile, pieces, [], pygame.display, True )
                             continue
 
                         # Check if it is a possible move
@@ -190,6 +191,11 @@ def main():
                         chosenPiece.rect.center = pos
                         chosenPiece.fn_update_position( pos )
 
+                        # Check if it is a pawn promotion
+                        if ( "Pawn" in chosenPiece.name and chosenPiece.team == "W" and "8" in chosenPiece.chessPosition ) or ( "Pawn" in chosenPiece.name and chosenPiece.team == "B" and "1" in chosenPiece.chessPosition ):
+                            fn_draw_board( screen, black_tile, pieces, [], pygame.display, False )
+                            chosenPiece = fn_pawn_promotion( chosenPiece, pieces )
+
                         # Write the move to the game log
                         fn_write_to_game_log( player, chosenPiece, takes, castles )
 
@@ -211,10 +217,10 @@ def main():
                                 possibleSquares = piece.fn_possible_moves( pieces )
                                 if not possibleSquares:
                                     # This piece has no moves, player cannot select this piece
-                                    print("This piece has no moves")
+                                    print( "This piece has no moves" )
                                 else:
                                     # Draw the possible move to the screen
-                                    fn_draw_board( screen, black_tile, pieces, possibleSquares, pygame.display)
+                                    fn_draw_board( screen, black_tile, pieces, possibleSquares, pygame.display, True )
 
                                 chosenPiece = pieces.pop( pieces.index( piece ) )
                                 oldPos = fn_get_square( pos )
@@ -223,14 +229,14 @@ def main():
                 # Right click to deselect piece
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                     [pieces, chosenPiece, oldPos] = fn_deselect_piece( piece, pieces, chosenPiece, oldPos )
-                    fn_draw_board( screen, black_tile, pieces, [], pygame.display)
+                    fn_draw_board( screen, black_tile, pieces, [], pygame.display, True )
 
         # Check if it puts their king in danger
         # Check if it puts the other king in danger
         # End turn, switch turns
 
         # Draw the board
-        fn_draw_board( screen, black_tile, pieces, [], pygame.display )
+        fn_draw_board( screen, black_tile, pieces, [], pygame.display, True )
 
         turn_num = turn_num + 1
 
@@ -319,12 +325,16 @@ def fn_draw_possible_moves( screen, possible_moves ):
         screen.blit( red_dot, screenCoords )
 
 
-def fn_draw_board( screen, tiles, pieces, possible_moves, display ):
+def fn_draw_board( screen, tiles, pieces, possible_moves, display, displayOn ):
+    # Passed: All the components that go on the screem
+    # Returns: None
+    # Draws and displays the screen
     fn_draw_tiles ( screen, tiles )
     fn_draw_pieces( screen, pieces )
     fn_draw_possible_moves( screen, possible_moves )
 
-    display.flip()
+    if displayOn:
+        display.flip()
 
 
 def fn_deselect_piece( piece, pieces, chosenPiece, oldPos ):
@@ -334,6 +344,66 @@ def fn_deselect_piece( piece, pieces, chosenPiece, oldPos ):
     chosenPiece = None
     oldPos      = None
     return [pieces, chosenPiece, oldPos]
+
+
+def fn_pawn_promotion( pawn, pieces ):
+    # Passed: the pawn to be promoted, the pieces
+    # Returns: The promoted piece
+    # Promotes the pawn to the selected piece
+
+    # Find where the white strip must go
+    if pawn.team =="W":
+        stripPosition = pawn.screenPosition
+        screen.blit( white_strip, pawn.screenPosition )
+    else:
+        # Need to raise the strip up 300 pixels to make it still on screen
+        ( x, y ) = pawn.screenPosition
+        y = y - 300
+        stripPosition = ( x, y )
+        screen.blit( white_strip, stripPosition )
+
+    # Get correct positions for display
+    ( x, y )   = stripPosition
+    queenPos   = stripPosition
+    rookPos    = ( x, y + 100 )
+    knightPos  = ( x, y + 200 )
+    bishopPos  = ( x, y + 300 )
+    
+    # Now create and display the possible promotion pieces
+    promotionPieces = []
+    if pawn.team == "W":
+        promoQueen  = Queen ( pawn.team, queenPos , WQueenImg  )
+        promoRook   = Rook  ( pawn.team, rookPos  , WRookImg   )
+        promoKnight = Knight( pawn.team, knightPos, WKnightImg )
+        promoBishop = Bishop( pawn.team, bishopPos, WBishopImg )
+    else:
+        promoQueen  = Queen ( pawn.team, queenPos , BQueenImg  )
+        promoRook   = Rook  ( pawn.team, rookPos  , BRookImg   )
+        promoKnight = Knight( pawn.team, knightPos, BKnightImg )
+        promoBishop = Bishop( pawn.team, bishopPos, BBishopImg )
+    
+    promotionPieces = [promoQueen, promoKnight, promoRook, promoBishop]
+    
+    fn_draw_pieces( screen, promotionPieces )
+
+    # Display board
+    pygame.display.flip()
+
+    chosen = False
+    while not chosen:
+        for event in pygame.event.get():
+            # Wait for user to select a piece
+            if event.type == pygame.QUIT: 
+                gameFile.close()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                mouseSquareNum = fn_get_square( pygame.mouse.get_pos() )
+                for piece in promotionPieces:
+                    if piece.squareNum == mouseSquareNum:
+                        # This piece is the promoted piece
+                        piece.chessPosition = pawn.chessPosition
+                        piece.fn_update_position( piece.chessPosition )
+                        return piece
 
 
 if __name__ == "__main__":
