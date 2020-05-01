@@ -200,8 +200,18 @@ def main():
                             fn_draw_board( screen, black_tile, pieces, [], pygame.display, False )
                             chosenPiece = fn_pawn_promotion( chosenPiece, pieces )
 
+                        # Check if it en passent
+                        enPassent = False
+                        if ( "Pawn" in chosenPiece.name and newPos == chosenPiece.enPassent ):
+                            enPassent = True
+                            takes     = True
+                            if chosenPiece.team == "W":
+                                fn_check_if_takes( newPos - 8, pieces, chosenPiece.team )
+                            else:
+                                fn_check_if_takes( newPos + 8, pieces, chosenPiece.team )
+
                         # Write the move to the game log
-                        fn_write_to_game_log( player, chosenPiece, takes, castles )
+                        fn_write_to_game_log( player, chosenPiece, takes, castles, enPassent )
 
                         # If King/rook move means no more castling with that piece
                         if "King" in piece.name or "Rook" in piece.name:
@@ -250,6 +260,9 @@ def fn_check_if_takes( pos, pieces, player ):
     # Passed: cords of the position, list of pieces, the player colour
     # Returns: bool
     # Checks if the passed square has an oppenent piece and removes it
+    if isinstance( pos, int ):
+        pos = fn_get_screen_coords( pos )
+
     for piece in pieces:
         if piece.rect.collidepoint(pos):
             if piece.team != player:
@@ -286,12 +299,14 @@ def fn_move_piece( position1, position2, pieces ):
             piece.fn_update_position( position2 )
 
 
-def fn_write_to_game_log( player, chosenPiece, takes, castles ):
+def fn_write_to_game_log( player, chosenPiece, takes, castles, enPassent ):
     # Passed: String, Piece, bool, bool
     # Returns: None
     # Writes to game log what move was played
     
-    if takes:
+    if takes and enPassent:
+        gameFile.write( chosenPiece.lastChessPos[0] + 'x' + chosenPiece.chessPosition + 'e.p. ' )
+    elif takes:
         gameFile.write( chosenPiece.abbrv + 'x' + chosenPiece.chessPosition + ' ' )
     elif castles:
         gameFile.write( castles )

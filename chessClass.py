@@ -266,24 +266,27 @@ class Piece():
                 elif move == 'EN': # En passant
                     goodMove = False
                     if self.team == "W" and "5" in self.chessPosition:
-                        # Check if there are pawns next to it and if they last moved
-                        if length == 1 and ( self.squareNum + 1) % 8 != 1:
-                            goodMove = fn_check_en_passent( self.squareNum + 1, self.team, pieces )
-                            square = self.squareNum + 9
-                        elif length == 2 and ( self.squareNum - 1) % 8 != 0:
-                            goodMove = fn_check_en_passent( self.squareNum - 1, self.team, pieces )
-                            square = self.squareNum + 7
+                        # Check if there is an enpassant move and store it if so
+                        if length == 1 and ( self.squareNum + 1 ) % 8 != 1:
+                            goodMove       = fn_check_en_passent( self.squareNum + 1, self.team, pieces )
+                            square         = self.squareNum + 9
+                        elif length == 2 and ( self.squareNum - 1 ) % 8 != 0:
+                            goodMove       = fn_check_en_passent( self.squareNum - 1, self.team, pieces )
+                            square         = self.squareNum + 7
                     
                     elif self.team == "B" and "4" in self.chessPosition:
-                        if length == 1 and ( self.squareNum + 1) % 8 != 1:
-                            goodMove = fn_check_en_passent( self.squareNum + 1, self.team, pieces )
-                            square   = self.squareNum - 7
-                        elif length == 2 and ( self.squareNum - 1) % 8 != 0:
-                            goodMove = fn_check_en_passent( self.squareNum - 1, self.team, pieces )
-                            square   = self.squareNum - 9
-
+                        if length == 1 and ( self.squareNum + 1 ) % 8 != 1:
+                            goodMove       = fn_check_en_passent( self.squareNum + 1, self.team, pieces )
+                            square         = self.squareNum - 7
+                        elif length == 2 and ( self.squareNum - 1 ) % 8 != 0:
+                            goodMove       = fn_check_en_passent( self.squareNum - 1, self.team, pieces )
+                            square         = self.squareNum - 9
+                    
+                    # Not a valid en Passant move
                     if not goodMove:
                         continue
+
+                    self.enPassent = square
                 
                 # Check if square is on the board (checks U and D directions)
                 if square < 0 or square > 64:
@@ -364,7 +367,8 @@ class Pawn( Piece ):
     def __init__( self, team, position, image ):
         Piece.__init__(self, team, position, image )
         self.fn_update_name()
-        self.abbrv    = ''
+        self.abbrv     = ''
+        self.enPassent = None
         if team == 'W':
             self.allMoves = {'U':[1,2], 'UL':[1], 'UR':[1], 'EN':[1,2]}
         else:
