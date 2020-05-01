@@ -45,6 +45,46 @@ def fn_pawn_can_take( pawnPiece, pieces, square ):
     return False
 
 
+def fn_last_moved( squareNum, pieces ):
+    # Passed: SquareNum, pieces
+    # Returns: bool
+    # Tells if the piece at that sqaure num was the last move
+    for piece in pieces:
+        if piece.squareNum == squareNum:
+            return piece.lastMoved
+    
+    return None
+
+
+def fn_last_chess_position( squareNum, pieces ):
+    # Passed: int, pieces, int
+    # Returns: int
+    # Returns the last position where a piece was
+    for piece in pieces:
+        if piece.squareNum == squareNum:
+            return piece.lastChessPos
+    
+    return None
+
+
+def fn_check_en_passent( squareNum, team, pieces ):
+    # Passed: square number, a team, the pieces
+    # Returns: bool
+    # Checks if the piece at that sqaure number can be en passented
+
+    for piece in pieces:
+        if piece.squareNum == squareNum:
+            if team == "W":
+                if fn_check_piece_is_there( "BPawn", squareNum, pieces ):
+                    return fn_last_moved( squareNum, pieces ) and "7" in fn_last_chess_position( squareNum, pieces )
+            elif team == "B":
+                if fn_check_piece_is_there( "WPawn", squareNum, pieces ):
+                    return fn_last_moved( squareNum, pieces ) and "2" in fn_last_chess_position( squareNum, pieces )
+    
+    # No pieces at that square number
+    return False
+
+
 class Piece():
     def __init__ (self, team, position, image):
         self.team           = team
@@ -57,6 +97,9 @@ class Piece():
         self.allMoves       = None
         self.currentMoves   = None
         self.abbrv          = None
+        self.lastMoved      = False
+        self.lastSquareNum  = None
+        self.lastChessPos   = None
         self.col            = {'a':0, 'b':100, 'c':200, 'd':300, 'e':400, 'f':500, 'g':600, 'h':700}
         self.row            = {'8':0, '7':100, '6':200, '5':300, '4':400, '3':500, '2':600, '1':700}
         self.fn_update_position( position )
@@ -66,6 +109,11 @@ class Piece():
         # Returns: None
         # Determines the location of the piece wtihin 1-64 and then calculates the screen position and 
         # chess board location
+
+        # Keep track of where the piece has been
+        self.lastChessPos  = self.chessPosition
+        self.lastSquareNum = self.squareNum
+
         if isinstance(position, str):
             # Turns chess string into screen coord tuple, then call itself using the tuple
             x = self.col[position[0]]
@@ -79,12 +127,13 @@ class Piece():
         elif isinstance( position, int ):
             self.squareNum = position
         else:
-            # ERROR Position passed to update Position was not str or tuple
+            # ERROR Position passed to update Position was not str, tuple, or int
             print("ERROR: " + piece.name + " did not update it's position porperly.")
 
         # Update the other methods of displaying position - based on the square number
         self.fn_chessboard_location()
         self.fn_screen_position()
+
 
     def fn_chessboard_location( self ):
         # Passed: None
@@ -98,6 +147,7 @@ class Piece():
         self.chessPosition = chessLoc
         self.fn_update_name()
 
+
     def fn_screen_position( self ):
         # Passed: None
         # Returns: None
@@ -107,6 +157,7 @@ class Piece():
             x = 700
         y = ( 8 - math.ceil( self.squareNum / 8 ) ) * 100
         self.screenPosition = (x, y)
+
 
     def fn_possible_moves( self, pieces ):
         # Passed: self, the other pieces
@@ -212,6 +263,28 @@ class Piece():
                             if fn_check_empty( [58,59,60], pieces ) and fn_check_piece_is_there( 'BRook', 57, pieces ) and not fn_check_moved ( 57, pieces ):
                                 square = 59
                 
+                elif move == 'EN': # En passant
+                    goodMove = False
+                    if self.team == "W" and "5" in self.chessPosition:
+                        # Check if there are pawns next to it and if they last moved
+                        if length == 1 and ( self.squareNum + 1) % 8 != 1:
+                            goodMove = fn_check_en_passent( self.squareNum + 1, self.team, pieces )
+                            square = self.squareNum + 9
+                        elif length == 2 and ( self.squareNum - 1) % 8 != 0:
+                            goodMove = fn_check_en_passent( self.squareNum - 1, self.team, pieces )
+                            square = self.squareNum + 7
+                    
+                    elif self.team == "B" and "4" in self.chessPosition:
+                        if length == 1 and ( self.squareNum + 1) % 8 != 1:
+                            goodMove = fn_check_en_passent( self.squareNum + 1, self.team, pieces )
+                            square   = self.squareNum - 7
+                        elif length == 2 and ( self.squareNum - 1) % 8 != 0:
+                            goodMove = fn_check_en_passent( self.squareNum - 1, self.team, pieces )
+                            square   = self.squareNum - 9
+
+                    if not goodMove:
+                        continue
+                
                 # Check if square is on the board (checks U and D directions)
                 if square < 0 or square > 64:
                     continue
@@ -293,9 +366,9 @@ class Pawn( Piece ):
         self.fn_update_name()
         self.abbrv    = ''
         if team == 'W':
-            self.allMoves = {'U':[1,2], 'UL':[1], 'UR':[1]}
+            self.allMoves = {'U':[1,2], 'UL':[1], 'UR':[1], 'EN':[1,2]}
         else:
-            self.allMoves = {'D':[1,2], 'DL':[1], 'DR':[1]}
+            self.allMoves = {'D':[1,2], 'DL':[1], 'DR':[1], 'EN':[1,2]}
 
     def fn_update_name( self ):
         self.name = self.team + "Pawn" + self.chessPosition

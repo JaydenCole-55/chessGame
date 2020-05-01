@@ -136,7 +136,8 @@ def main():
 
         # Wait for user to choose where to move piece
         chosenPiece = None
-        oldPos = None
+        oldPos      = None
+
         while turnGoing:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: 
@@ -190,6 +191,9 @@ def main():
                         # Then move piece to that position and append it back to pieces
                         chosenPiece.rect.center = pos
                         chosenPiece.fn_update_position( pos )
+                        chosenPiece.lastMoved = True
+
+                        pieces = fn_update_last_move( chosenPiece, pieces )
 
                         # Check if it is a pawn promotion
                         if ( "Pawn" in chosenPiece.name and chosenPiece.team == "W" and "8" in chosenPiece.chessPosition ) or ( "Pawn" in chosenPiece.name and chosenPiece.team == "B" and "1" in chosenPiece.chessPosition ):
@@ -405,6 +409,17 @@ def fn_pawn_promotion( pawn, pieces ):
                         piece.chessPosition = pawn.chessPosition
                         piece.fn_update_position( piece.chessPosition )
                         return piece
+
+
+def fn_update_last_move( movedPiece, pieces ):
+    # Passed: a piece, all the pieces
+    # Returns, the updated pieces
+    # Updates all the pieces of that team to not be the last moved piece
+    for piece in pieces:
+        if piece.team == movedPiece.team:
+            piece.lastMoved = False
+    
+    return pieces
 
 
 if __name__ == "__main__":
