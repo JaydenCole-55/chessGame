@@ -124,6 +124,9 @@ class Piece():
                     elif "Pawn" in self.name and not fn_check_empty( [square], pieces):
                         # Square is not empty, pawn cannot move there
                         continue
+                    elif "Pawn" in self.name and length == 2 and not fn_check_empty( [square, square-8], pieces ):
+                        # Pawn first move is length 2, check if its entire path is empty
+                        continue
 
                 elif move == 'UL':
                     square = self.squareNum + 8 * length - length
@@ -150,6 +153,9 @@ class Piece():
                         continue
                     elif "Pawn" in self.name and not fn_check_empty( [square], pieces):
                         # Square is not empty, pawn cannot move there
+                        continue
+                    elif "Pawn" in self.name and length == 2 and not fn_check_empty( [square, square+8], pieces ):
+                        # Pawn first move is length 2, check if its entire path is empty
                         continue
 
                 elif move == 'DR':
