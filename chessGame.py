@@ -211,17 +211,18 @@ def main():
                         for piece in pieces:
                             if piece.rect.collidepoint( pos ) and piece.team == player:
                                 # Player is attempting to move this piece
-                                # Remove from pieces list to be modified and appended back later
-
                                 # Check if the piece can move
                                 possibleSquares = piece.fn_possible_moves( pieces )
                                 if not possibleSquares:
                                     # This piece has no moves, player cannot select this piece
                                     print( "This piece has no moves" )
+                                    [pieces, chosenPiece, oldPos] = fn_deselect_piece( piece, pieces, chosenPiece, oldPos )
+                                    break
                                 else:
                                     # Draw the possible move to the screen
                                     fn_draw_board( screen, black_tile, pieces, possibleSquares, pygame.display, True )
 
+                                # Remove from pieces list to be modified and appended back later
                                 chosenPiece = pieces.pop( pieces.index( piece ) )
                                 oldPos = fn_get_square( pos )
                                 break
